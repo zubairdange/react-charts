@@ -1,8 +1,7 @@
 import React, { Component } from 'react'
-import { Provider, Connect } from 'react-state'
 import RAF from 'raf'
 //
-import { Animate } from './ReactMove'
+import { Provider, Consumer } from '../utils/Context'
 import Selectors from '../utils/Selectors'
 import HyperResponsive from '../utils/HyperResponsive'
 import Utils from '../utils/Utils'
@@ -35,122 +34,81 @@ class Chart extends Component {
       interaction, hoverMode, groupMode, showVoronoi, dispatch,
     } = this.props
     if (interaction) {
-      dispatch(
-        state => ({
-          ...state,
-          interaction,
-        }),
-        {
-          type: 'interaction',
-        }
-      )
+      dispatch(state => ({
+        ...state,
+        interaction,
+      }))
     }
     if (hoverMode) {
-      dispatch(
-        state => ({
-          ...state,
-          hoverMode,
-        }),
-        {
-          type: 'hoverMode',
-        }
-      )
+      dispatch(state => ({
+        ...state,
+        hoverMode,
+      }))
     }
     if (groupMode) {
-      dispatch(
-        state => ({
-          ...state,
-          groupMode,
-        }),
-        {
-          type: 'groupMode',
-        }
-      )
+      dispatch(state => ({
+        ...state,
+        groupMode,
+      }))
     }
     if (showVoronoi) {
-      dispatch(
-        state => ({
-          ...state,
-          showVoronoi,
-        }),
-        {
-          type: 'showVoronoi',
-        }
-      )
+      dispatch(state => ({
+        ...state,
+        showVoronoi,
+      }))
     }
-    this.updateDataModel(this.props)
-    this.componentDidUpdate(this.props)
+    this.updatePreMaterializedData()
   }
-  componentWillReceiveProps (nextProps) {
+  componentDidUpdate (oldProps) {
+    const newProps = this.props
+    const { dispatch } = newProps
     // If anything related to the data model changes, update it
-    if (nextProps.interaction !== this.props.interaction) {
-      this.props.dispatch(
-        state => ({
-          ...state,
-          interaction: nextProps.interaction,
-        }),
-        {
-          type: 'interaction',
-        }
-      )
+    if (newProps.interaction !== oldProps.interaction) {
+      dispatch(state => ({
+        ...state,
+        interaction: newProps.interaction,
+      }))
     }
 
-    if (nextProps.hoverMode !== this.props.hoverMode) {
-      this.props.dispatch(
-        state => ({
-          ...state,
-          hoverMode: nextProps.hoverMode,
-        }),
-        {
-          type: 'hoverMode',
-        }
-      )
+    if (newProps.hoverMode !== oldProps.hoverMode) {
+      dispatch(state => ({
+        ...state,
+        hoverMode: newProps.hoverMode,
+      }))
     }
-    if (nextProps.groupMode !== this.props.groupMode) {
-      this.props.dispatch(
-        state => ({
-          ...state,
-          groupMode: nextProps.groupMode,
-        }),
-        {
-          type: 'groupMode',
-        }
-      )
+    if (newProps.groupMode !== oldProps.groupMode) {
+      dispatch(state => ({
+        ...state,
+        groupMode: newProps.groupMode,
+      }))
     }
-    if (nextProps.showVoronoi !== this.props.showVoronoi) {
-      this.props.dispatch(
-        state => ({
-          ...state,
-          showVoronoi: nextProps.showVoronoi,
-        }),
-        {
-          type: 'showVoronoi',
-        }
-      )
+    if (newProps.showVoronoi !== oldProps.showVoronoi) {
+      dispatch(state => ({
+        ...state,
+        showVoronoi: newProps.showVoronoi,
+      }))
     }
 
     if (
-      nextProps.data !== this.props.data ||
-      nextProps.width !== this.props.width ||
-      nextProps.height !== this.props.height ||
-      nextProps.getSeries !== this.props.getSeries ||
-      nextProps.getDatums !== this.props.getDatums ||
-      nextProps.getSeriesID !== this.props.getSeriesID ||
-      nextProps.getLabel !== this.props.getLabel ||
-      nextProps.getPrimary !== this.props.getPrimary ||
-      nextProps.getSecondary !== this.props.getSecondary ||
-      nextProps.getR !== this.props.getR ||
-      nextProps.getPrimaryAxisID !== this.props.getPrimaryAxisID ||
-      nextProps.getSecondaryAxisID !== this.props.getSecondaryAxisID
+      newProps.data !== oldProps.data ||
+      newProps.width !== oldProps.width ||
+      newProps.height !== oldProps.height ||
+      newProps.getSeries !== oldProps.getSeries ||
+      newProps.getDatums !== oldProps.getDatums ||
+      newProps.getSeriesID !== oldProps.getSeriesID ||
+      newProps.getLabel !== oldProps.getLabel ||
+      newProps.getPrimary !== oldProps.getPrimary ||
+      newProps.getSecondary !== oldProps.getSecondary ||
+      newProps.getR !== oldProps.getR ||
+      newProps.getPrimaryAxisID !== oldProps.getPrimaryAxisID ||
+      newProps.getSecondaryAxisID !== oldProps.getSecondaryAxisID
     ) {
-      this.updateDataModel(nextProps)
+      this.updatePreMaterializedData()
     }
+    RAF(() => this.measure(oldProps))
   }
-  componentDidUpdate (prevProps) {
-    RAF(() => this.measure(prevProps))
-  }
-  updateDataModel = props => {
-    const { data } = props
+  updatePreMaterializedData = () => {
+    const { data } = this.props
     let {
       getSeries,
       getDatums,
@@ -161,7 +119,7 @@ class Chart extends Component {
       getR,
       getPrimaryAxisID,
       getSecondaryAxisID,
-    } = props
+    } = this.props
 
     // Normalize getters
     getSeries = Utils.normalizePathGetter(getSeries)
@@ -218,35 +176,97 @@ class Chart extends Component {
     })
 
     // Provide the preMaterializedData to the chart instance
-    this.props.dispatch(
-      state => ({
-        ...state,
-        preMaterializedData,
-      }),
-      {
-        type: 'preMaterializedData',
-      }
-    )
+    this.props.dispatch(state => ({
+      ...state,
+      preMaterializedData,
+    }))
   }
-  measure = prevProps => {
+  measure = oldProps => {
     if (
-      prevProps &&
-      (this.props.offset.left !== prevProps.offset.left ||
-        this.props.offset.top !== prevProps.offset.top)
+      oldProps &&
+      (this.props.offset.left !== oldProps.offset.left ||
+        this.props.offset.top !== oldProps.offset.top)
     ) {
-      this.props.dispatch(
-        state => ({
-          ...state,
-          offset: {
-            left: this.el.offsetLeft,
-            top: this.el.offsetTop,
-          },
-        }),
-        {
-          type: 'offset',
-        }
-      )
+      this.props.dispatch(state => ({
+        ...state,
+        offset: {
+          left: this.el.offsetLeft,
+          top: this.el.offsetTop,
+        },
+      }))
     }
+  }
+  onMouseMove = Utils.throttle(e => {
+    console.log('move')
+    const { clientX, clientY } = e
+    this.dims = this.el.getBoundingClientRect()
+    const { gridX, gridY, dispatch } = this.props
+
+    dispatch(state => {
+      const x = clientX - this.dims.left - gridX
+      const y = clientY - this.dims.top - gridY
+
+      const pointer = {
+        ...state.pointer,
+        active: true,
+        x,
+        y,
+        dragging: state.pointer && state.pointer.down,
+      }
+      return {
+        ...state,
+        pointer,
+      }
+    })
+  })
+  onMouseLeave = () => {
+    const { dispatch } = this.props
+    dispatch(state => ({
+      ...state,
+      pointer: {
+        ...state.pointer,
+        active: false,
+      },
+      hovered: {
+        ...state.hovered,
+        active: false,
+      },
+    }))
+  }
+  onMouseDown = () => {
+    const { dispatch } = this.props
+
+    document.addEventListener('mouseup', this.onMouseUp)
+    document.addEventListener('mousemove', this.onMouseMove)
+
+    dispatch(state => ({
+      ...state,
+      pointer: {
+        ...state.pointer,
+        sourceX: state.pointer.x,
+        sourceY: state.pointer.y,
+        down: true,
+      },
+    }))
+  }
+  onMouseUp = () => {
+    const { dispatch } = this.props
+
+    document.removeEventListener('mouseup', this.onMouseUp)
+    document.removeEventListener('mousemove', this.onMouseMove)
+
+    dispatch(state => ({
+      ...state,
+      pointer: {
+        ...state.pointer,
+        down: false,
+        dragging: false,
+        released: {
+          x: state.pointer.x,
+          y: state.pointer.y,
+        },
+      },
+    }))
   }
   render () {
     const {
@@ -266,6 +286,16 @@ class Chart extends Component {
           height,
           position: 'relative',
         }}
+        onMouseEnter={e => {
+          e.persist()
+          this.onMouseMove(e)
+        }}
+        onMouseMove={e => {
+          e.persist()
+          this.onMouseMove(e)
+        }}
+        onMouseLeave={this.onMouseLeave}
+        onMouseDown={this.onMouseDown}
       >
         <svg
           ref={el => {
@@ -278,19 +308,7 @@ class Chart extends Component {
             ...style,
           }}
         >
-          <g
-            transform={`translate(${gridX || 0}, ${gridY || 0})`}
-            onMouseEnter={e => {
-              e.persist()
-              this.onMouseMove(e)
-            }}
-            onMouseMove={e => {
-              e.persist()
-              this.onMouseMove(e)
-            }}
-            onMouseLeave={this.onMouseLeave}
-            onMouseDown={this.onMouseDown}
-          >
+          <g transform={`translate(${gridX || 0}, ${gridY || 0})`}>
             <Rectangle
               // This is to ensure the pointer always has something to hit
               x1={-gridX}
@@ -309,144 +327,40 @@ class Chart extends Component {
       </div>
     )
   }
-  onMouseMove = Utils.throttle(e => {
-    const { clientX, clientY } = e
-    this.dims = this.el.getBoundingClientRect()
-    const { gridX, gridY, dispatch } = this.props
-
-    dispatch(
-      state => {
-        const x = clientX - this.dims.left - gridX
-        const y = clientY - this.dims.top - gridY
-
-        const pointer = {
-          ...state.pointer,
-          active: true,
-          x,
-          y,
-          dragging: state.pointer && state.pointer.down,
-        }
-        return {
-          ...state,
-          pointer,
-        }
-      },
-      {
-        type: 'pointer',
-      }
-    )
-  })
-  onMouseLeave = () => {
-    const { dispatch } = this.props
-    dispatch(
-      state => ({
-        ...state,
-        pointer: {
-          ...state.pointer,
-          active: false,
-        },
-        hovered: {
-          ...state.hovered,
-          active: false,
-        },
-      }),
-      {
-        type: 'pointer',
-      }
-    )
-  }
-  onMouseDown = () => {
-    const { dispatch } = this.props
-
-    document.addEventListener('mouseup', this.onMouseUp)
-    document.addEventListener('mousemove', this.onMouseMove)
-
-    dispatch(
-      state => ({
-        ...state,
-        pointer: {
-          ...state.pointer,
-          sourceX: state.pointer.x,
-          sourceY: state.pointer.y,
-          down: true,
-        },
-      }),
-      {
-        type: 'pointer',
-      }
-    )
-  }
-  onMouseUp = () => {
-    const { dispatch } = this.props
-
-    document.removeEventListener('mouseup', this.onMouseUp)
-    document.removeEventListener('mousemove', this.onMouseMove)
-
-    dispatch(
-      state => ({
-        ...state,
-        pointer: {
-          ...state.pointer,
-          down: false,
-          dragging: false,
-          released: {
-            x: state.pointer.x,
-            y: state.pointer.y,
-          },
-        },
-      }),
-      {
-        type: 'pointer',
-      }
-    )
-  }
 }
 
-const ReactChart = Connect(
-  () => {
-    const selectors = {
-      gridWidth: Selectors.gridWidth(),
-      gridHeight: Selectors.gridHeight(),
-      gridX: Selectors.gridX(),
-      gridY: Selectors.gridY(),
-      offset: Selectors.offset(),
-    }
-    return state => ({
-      data: state.data,
-      width: state.width,
-      height: state.height,
-      active: state.active,
-      selected: state.selected,
-      gridWidth: selectors.gridWidth(state),
-      gridHeight: selectors.gridHeight(state),
-      gridX: selectors.gridX(state),
-      gridY: selectors.gridY(state),
-      offset: selectors.offset(state),
-    })
-  },
-  {
-    pure: false,
-    filter: (oldState, newState, meta) => meta.type !== 'pointer',
+const subscribe = () => {
+  const selectors = {
+    gridWidth: Selectors.gridWidth(),
+    gridHeight: Selectors.gridHeight(),
+    gridX: Selectors.gridX(),
+    gridY: Selectors.gridY(),
+    offset: Selectors.offset(),
   }
-)(Chart)
+  return state => ({
+    width: state.width,
+    height: state.height,
+    active: state.active,
+    selected: state.selected,
+    gridWidth: selectors.gridWidth(state),
+    gridHeight: selectors.gridHeight(state),
+    gridX: selectors.gridX(state),
+    gridY: selectors.gridY(state),
+    offset: selectors.offset(state),
+  })
+}
 
-const ProvidedChart = Provider(ReactChart, {
-  initial: {
-    hovered: {
-      active: false,
-      series: null,
-      datums: [],
-    },
-    cursors: {},
-    axes: {},
-    pointer: {},
-  },
-})
-
-export default props => (
-  <HyperResponsive
-    render={({ handleRef, width, height }) => (
-      <ProvidedChart {...props} width={width} height={height} handleRef={handleRef} />
-    )}
-  />
-)
+export default function ReactChart (props) {
+  return (
+    <HyperResponsive
+      render={({ handleRef, width, height }) => (
+        <Provider width={width} height={height}>
+          <Consumer
+            subscribe={subscribe}
+            render={context => <Chart {...props} handleRef={handleRef} {...context} />}
+          />
+        </Provider>
+      )}
+    />
+  )
+}

@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react'
+import React, { Component } from 'react'
 //
 import { Animate } from '../components/ReactMove'
 
@@ -10,7 +10,7 @@ const defaultStyle = {
   ry: 0,
 }
 
-export default class Rectangle extends PureComponent {
+export default class Rectangle extends Component {
   static defaultProps = {
     opacity: 1,
   }

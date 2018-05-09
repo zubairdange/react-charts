@@ -18,7 +18,7 @@ import bash from 'reprism/languages/bash'
 loadLanguages(jsx, bash)
 
 injectGlobal`
-  @import url('https://fonts.googleapis.com/css?family=Roboto+Mono');
+  ${''}
 
   body {
     font-family: 'Roboto', sans-serif;
@@ -50,8 +50,8 @@ injectGlobal`
   }
 
   .react-resizable-handle {
-    bottom: -10px;
-    right: -10px;
+    bottom: -10px !important;
+    right: -10px !important;
   }
 
   pre, code {

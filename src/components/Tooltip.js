@@ -1,5 +1,5 @@
-import React, { PureComponent } from 'react'
-import { Connect } from 'react-state'
+import React, { Component } from 'react'
+import { withConsumer } from '../utils/Context'
 //
 import { Animate } from './ReactMove'
 import Utils from '../utils/Utils'
@@ -8,7 +8,7 @@ import Selectors from '../utils/Selectors'
 
 const backgroundColor = 'rgba(38, 38, 38, 0.9)'
 
-class Tooltip extends PureComponent {
+class Tooltip extends Component {
   static defaultProps = {
     focus: 'closest',
     align: 'auto',
@@ -292,7 +292,7 @@ class Tooltip extends PureComponent {
       }
     }
 
-    const visibility = hovered.active ? 1 : 0
+    const opacity = hovered.active ? 1 : 0
 
     const start = {
       x,
@@ -301,14 +301,14 @@ class Tooltip extends PureComponent {
       alignX,
       alignY,
       triangleStyles,
-      visibility: 0,
+      opacity: 0,
     }
 
     const update = {}
     Object.keys(start).forEach(key => {
       update[key] = [start[key]]
     })
-    update.visibility = [visibility]
+    update.opacity = [opacity]
 
     const primaryAxis = Utils.getAxisByAxisID(
       primaryAxes,
@@ -321,13 +321,13 @@ class Tooltip extends PureComponent {
 
     return (
       <Animate
-        show={visibility}
+        show={opacity}
         start={start}
         enter={update}
         update={update}
         leave={update}
         render={({
- x, y, alignX, alignY, triangleStyles, padding, visibility,
+ x, y, alignX, alignY, triangleStyles, padding, opacity,
 }) => {
           let renderedChildren
           const renderProps = {
@@ -362,7 +362,7 @@ class Tooltip extends PureComponent {
                 top: `${top + gridY}px`,
                 width: `${gridWidth}px`,
                 height: `${gridHeight}px`,
-                opacity: visibility,
+                opacity,
               }}
             >
               <div
@@ -535,7 +535,7 @@ function defaultRenderer (props) {
   )
 }
 
-export default Connect(() => {
+export default withConsumer(() => {
   const selectors = {
     primaryAxes: Selectors.primaryAxes(),
     secondaryAxes: Selectors.secondaryAxes(),

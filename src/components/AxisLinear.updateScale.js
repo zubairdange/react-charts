@@ -13,7 +13,7 @@ const scales = {
 const detectVertical = position => [positionLeft, positionRight].indexOf(position) > -1
 const detectRTL = position => [positionTop, positionRight].indexOf(position) > -1
 
-export default function updateScale (props) {
+export default function updateScale () {
   const {
     // Computed
     id,
@@ -41,7 +41,7 @@ export default function updateScale (props) {
     width,
     height,
     primaryAxes,
-  } = props
+  } = this.props
 
   // We need the data to proceed
   if (!materializedData) {
@@ -290,18 +290,13 @@ export default function updateScale (props) {
   // Make sure we start with a prevAxis
   this.prevAxis = this.prevAxis || axis
 
-  this.props.dispatch(
-    state => ({
-      ...state,
-      axes: {
-        ...state.axes,
-        [id]: axis,
-      },
-    }),
-    {
-      type: 'axisUpdateScale',
-    }
-  )
+  this.props.dispatch(state => ({
+    ...state,
+    axes: {
+      ...state.axes,
+      [id]: axis,
+    },
+  }))
 }
 
 function identity (x) {

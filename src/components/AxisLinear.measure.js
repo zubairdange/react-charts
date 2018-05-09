@@ -28,18 +28,13 @@ export default function measure () {
 
   if (!this.el) {
     // If the entire axis is hidden, then we need to remove the axis dimensions
-    dispatch(
-      state => ({
-        ...state,
-        axisDimensions: {
-          ...state.axisDimensions,
-          [position]: undefined,
-        },
-      }),
-      {
-        type: 'axisDimensions',
-      }
-    )
+    dispatch(state => ({
+      ...state,
+      axisDimensions: {
+        ...state.axisDimensions,
+        [position]: undefined,
+      },
+    }))
     return
   }
 
@@ -130,25 +125,20 @@ export default function measure () {
       Math.max(...labelDims.map(d => Math.ceil(getPixel(d.width))))
   }
 
-  dispatch(
-    state => ({
-      ...state,
-      axisDimensions: {
-        ...state.axisDimensions,
-        [position]: {
-          width,
-          height,
-          top,
-          bottom,
-          left,
-          right,
-        },
+  dispatch(state => ({
+    ...state,
+    axisDimensions: {
+      ...state.axisDimensions,
+      [position]: {
+        width,
+        height,
+        top,
+        bottom,
+        left,
+        right,
       },
-    }),
-    {
-      type: 'axisDimensions',
-    }
-  )
+    },
+  }))
 
   return true
 }

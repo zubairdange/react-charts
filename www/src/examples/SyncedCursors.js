@@ -26,7 +26,7 @@ class Story extends Component {
               <Series type={Area} />
               <Cursor
                 primary
-                value={console.log(1, cursorValue) || cursorValue}
+                value={cursorValue}
                 onChange={state => {
                   this.setState({
                     cursorValue: state.value,
@@ -47,7 +47,7 @@ class Story extends Component {
               <Series type={Area} />
               <Cursor
                 primary
-                value={console.log(2, cursorValue) || cursorValue}
+                value={cursorValue}
                 onChange={state => {
                   this.setState({
                     cursorValue: state.value,
@@ -68,7 +68,7 @@ class Story extends Component {
               <Series type={Area} />
               <Cursor
                 primary
-                value={console.log(3, cursorValue) || cursorValue}
+                value={cursorValue}
                 onChange={state => {
                   this.setState({
                     cursorValue: state.value,

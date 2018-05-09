@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
-import { Connect } from 'react-state'
-import { Animate } from './ReactMove'
 //
+import { withConsumer } from '../utils/Context'
+import { Animate } from './ReactMove'
 import Selectors from '../utils/Selectors'
 import Utils from '../utils/Utils'
 
@@ -150,7 +150,6 @@ class Cursor extends Component {
       value: manualValue,
       primary,
       snap,
-      id,
       //
       cursor,
       offset: { left, top },
@@ -344,7 +343,7 @@ class Cursor extends Component {
   }
 }
 
-export default Connect(() => {
+export default withConsumer(() => {
   const selectors = {
     primaryAxes: Selectors.primaryAxes(),
     secondaryAxes: Selectors.secondaryAxes(),

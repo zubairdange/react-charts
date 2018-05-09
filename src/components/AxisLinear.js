@@ -1,8 +1,7 @@
 import React, { Component } from 'react'
-import { Connect } from 'react-state'
 import RAF from 'raf'
 //
-import { Animate, NodeGroup } from './ReactMove'
+import { withConsumer } from '../utils/Context'
 import Utils from '../utils/Utils'
 
 import measure from './AxisLinear.measure'
@@ -61,37 +60,38 @@ class Axis extends Component {
     this.measureRotation = Utils.throttle(measure.bind(this))
     this.updateScale = updateScale.bind(this)
   }
-  componentWillReceiveProps (newProps) {
-    const oldProps = this.props
-    if (oldProps.axis !== newProps.axis && oldProps.axis) {
-      this.prevAxis = oldProps.axis
+  componentDidUpdate () {
+    RAF(() => this.measure())
+  }
+  componentDidMount () {
+    this.updateScale(this.props)
+  }
+  shouldComponentUpdate (newProps, nextState) {
+    if (this.props.axis !== newProps.axis && newProps.axis) {
+      this.prevAxis = newProps.axis
     }
 
     // If any of the following change,
     // we need to update the axis
     if (
-      newProps.primary !== oldProps.primary ||
-      newProps.type !== oldProps.type ||
-      newProps.invert !== oldProps.invert ||
-      newProps.materializedData !== oldProps.materializedData ||
-      newProps.height !== oldProps.height ||
-      newProps.width !== oldProps.width ||
-      newProps.position !== oldProps.position ||
-      newProps.min !== oldProps.min ||
-      newProps.max !== oldProps.max ||
-      newProps.hardMin !== oldProps.hardMin ||
-      newProps.hardMax !== oldProps.hardMax
+      Utils.shallowCompare(this.props, newProps, [
+        'primary',
+        'type',
+        'invert',
+        'materializedData',
+        'height',
+        'width',
+        'position',
+        'min',
+        'max',
+        'hardMin',
+        'hardMax',
+      ])
     ) {
       this.updateScale(newProps)
     }
-  }
-  componentDidMount () {
-    this.updateScale(this.props)
-  }
-  componentDidUpdate () {
-    this.measure()
-  }
-  shouldComponentUpdate (newProps, nextState) {
+
+    // Should Update?
     if (newProps.axis !== this.props.axis || this.state.rotation !== nextState.rotation) {
       return true
     }
@@ -268,32 +268,27 @@ class Axis extends Component {
   }
 }
 
-export default Connect(
-  () => {
-    const selectors = {
-      gridWidth: Selectors.gridWidth(),
-      gridHeight: Selectors.gridHeight(),
-      primaryAxes: Selectors.primaryAxes(),
-    }
-    return (state, props) => {
-      const { type, position, id: userID } = props
-
-      const id = userID || `${type}_${position}`
-
-      return {
-        id,
-        primaryAxes: selectors.primaryAxes(state),
-        width: selectors.gridWidth(state),
-        height: selectors.gridHeight(state),
-        materializedData: state.materializedData,
-        axis: state.axes && state.axes[id],
-      }
-    }
-  },
-  {
-    filter: (oldState, newState, meta) => meta.type !== 'pointer',
+export default withConsumer(() => {
+  const selectors = {
+    gridWidth: Selectors.gridWidth(),
+    gridHeight: Selectors.gridHeight(),
+    primaryAxes: Selectors.primaryAxes(),
   }
-)(Axis)
+  return (state, props) => {
+    const { type, position, id: userID } = props
+
+    const id = userID || `${type}_${position}`
+
+    return {
+      id,
+      primaryAxes: selectors.primaryAxes(state),
+      width: selectors.gridWidth(state),
+      height: selectors.gridHeight(state),
+      materializedData: state.materializedData,
+      axis: state.axes && state.axes[id],
+    }
+  }
+})(Axis)
 
 function translateX (x) {
   return `translate(${x}, 0)`

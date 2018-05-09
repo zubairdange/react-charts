@@ -1,10 +1,17 @@
 import makeContext from './makeContext'
 
-const {
-  Provider, Consumer, withProvider, withConsumer,
-} = makeContext({
-  displayName: 'ChartContext',
-  initialState: {},
+const { Provider, Consumer, withConsumer } = makeContext({
+  displayName: 'ReactChart',
+  initialState: {
+    hovered: {
+      active: false,
+      series: null,
+      datums: [],
+    },
+    cursors: {},
+    axes: {},
+    pointer: {},
+  },
 })
 
-export { Provider, Consumer, withProvider, withConsumer }
+export { Provider, Consumer, withConsumer }

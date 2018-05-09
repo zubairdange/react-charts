@@ -1,11 +1,9 @@
-import React, { PureComponent } from 'react'
-import { Connect } from 'react-state'
+import React, { Component } from 'react'
 import { line } from 'd3-shape'
 
 //
 
-import { Animate } from '../components/ReactMove'
-
+import { withConsumer } from '../utils/Context'
 import Utils from '../utils/Utils'
 import Curves from '../utils/Curves'
 import { selectSeries, selectDatum, hoverSeries, hoverDatum } from '../utils/interactionMethods'
@@ -21,7 +19,7 @@ const circleDefaultStyle = {
   r: 2,
 }
 
-class Line extends PureComponent {
+class Line extends Component {
   static defaultProps = {
     showPoints: true,
     curve: 'monotoneX',
@@ -169,13 +167,8 @@ class Line extends PureComponent {
   }
 }
 
-export default Connect(
-  state => ({
-    hovered: state.hovered,
-    selected: state.selected,
-    interaction: state.interaction,
-  }),
-  {
-    filter: (oldState, newState, meta) => meta.type !== 'pointer',
-  }
-)(Line)
+export default withConsumer(state => ({
+  hovered: state.hovered,
+  selected: state.selected,
+  interaction: state.interaction,
+}))(Line)

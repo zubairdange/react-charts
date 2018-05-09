@@ -1,9 +1,9 @@
-import React, { PureComponent } from 'react'
+import React, { Component } from 'react'
 //
 import AxisPie from './AxisPie'
 import AxisLinear from './AxisLinear'
 
-export default class Axis extends PureComponent {
+export default class Axis extends Component {
   render () {
     const { type, primary, position } = this.props
 

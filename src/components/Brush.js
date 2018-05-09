@@ -1,22 +1,23 @@
-import React, { PureComponent } from 'react'
-import { Connect } from 'react-state'
+import React, { Component } from 'react'
+import { withConsumer } from '../utils/Context'
 //
 import Selectors from '../utils/Selectors'
 // import Rectangle from '../primitives/Rectangle'
 
-class Brush extends PureComponent {
+class Brush extends Component {
   static defaultProps = {
     onSelect: () => {},
   }
   static isHtml = true
-  componentWillReceiveProps (nextProps) {
-    const { onSelect, pointer, primaryAxes } = this.props
-    if (this.props.pointer && nextProps.pointer.released !== this.props.pointer.released) {
+  componentDidUpdate (oldProps) {
+    const newProps = this.props
+    const { onSelect, pointer, primaryAxes } = newProps
+    if (pointer && oldProps.pointer.released !== pointer.released) {
       if (Math.abs(pointer.sourceX - pointer.x) < 20) {
         return
       }
       onSelect({
-        pointer: nextProps.pointer.released,
+        pointer: pointer.released,
         start: primaryAxes[0].scale.invert(pointer.sourceX),
         end: primaryAxes[0].scale.invert(pointer.x),
       })
@@ -53,7 +54,7 @@ class Brush extends PureComponent {
   }
 }
 
-export default Connect(() => {
+export default withConsumer(() => {
   const selectors = {
     primaryAxes: Selectors.primaryAxes(),
     offset: Selectors.offset(),

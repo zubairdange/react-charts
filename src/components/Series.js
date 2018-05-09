@@ -1,10 +1,6 @@
 import React, { Component } from 'react'
-import { Connect } from 'react-state'
-
 //
-
-import { NodeGroup } from './ReactMove'
-
+import { withConsumer } from '../utils/Context'
 import Utils from '../utils/Utils'
 import Selectors from '../utils/Selectors'
 
@@ -39,11 +35,11 @@ class Series extends Component {
     getDatumStyles: () => ({}),
   }
   componentDidMount () {
-    this.updateMaterializedData(this.props)
-    this.updateStackData(this.props)
+    this.updateMaterializedData()
+    this.updateStackData()
   }
-  componentWillReceiveProps (newProps) {
-    const oldProps = this.props
+  componentDidUpdate (oldProps) {
+    const newProps = this.props
 
     // If any of the following change,
     // we need to update the materializedData
@@ -51,7 +47,7 @@ class Series extends Component {
       newProps.type !== oldProps.type ||
       newProps.preMaterializedData !== oldProps.preMaterializedData
     ) {
-      this.updateMaterializedData(newProps)
+      this.updateMaterializedData()
     }
 
     // If any of the following change,
@@ -64,18 +60,11 @@ class Series extends Component {
       newProps.secondaryAxes !== oldProps.secondaryAxes ||
       newProps.groupMode !== oldProps.groupMode
     ) {
-      this.updateStackData(newProps)
+      this.updateStackData()
     }
   }
-  shouldComponentUpdate (nextProps) {
-    if (nextProps.stackData !== this.props.stackData) {
-      this.stackData = [...nextProps.stackData].reverse() // For proper svg stacking
-      return true
-    }
-    return false
-  }
-  updateMaterializedData (props) {
-    const { preMaterializedData, type, dispatch } = props
+  updateMaterializedData () {
+    const { preMaterializedData, type, dispatch } = this.props
 
     // We need preMaterializedData to proceed
     if (!preMaterializedData) {
@@ -88,7 +77,6 @@ class Series extends Component {
         .map((series, index) => {
           const SeriesComponent = getType(type, series, index)
           if (debug && !SeriesComponent) {
-            console.log(series)
             throw new Error(
               `An invalid series component was passed for the series above (index: ${index}.`
             )
@@ -112,7 +100,7 @@ class Series extends Component {
         }),
     }))
   }
-  updateStackData (props) {
+  updateStackData () {
     const {
       getStyles,
       getDatumStyles,
@@ -121,7 +109,7 @@ class Series extends Component {
       primaryAxes,
       secondaryAxes,
       groupMode,
-    } = props
+    } = this.props
 
     // We need materializedData and both axes to continue
     if (!materializedData || !primaryAxes.length || !secondaryAxes.length) {
@@ -305,53 +293,47 @@ class Series extends Component {
       return result || series
     })
 
-    this.props.dispatch(
-      state => ({
-        ...state,
-        stackData,
-      }),
-      {
-        type: 'stackData',
-      }
-    )
+    this.props.dispatch(state => ({
+      ...state,
+      stackData,
+    }))
   }
   render () {
-    const { type, getDatumStyles, ...rest } = this.props
-    const { stackData } = this
+    const {
+      type, getDatumStyles, stackData, ...rest
+    } = this.props
 
     if (!stackData) {
       return null
     }
 
+    const flippedStackData = [...stackData].reverse()
+
     return (
       <g className="Series">
-        {stackData.map(stack => {
+        {flippedStackData.map(stack => {
           const StackCmp = getType(type, stack, stack.id)
-          return <StackCmp {...rest} key={stack.id} series={stack} stackData={stackData} />
+          return <StackCmp {...rest} key={stack.id} series={stack} stackData={flippedStackData} />
         })}
       </g>
     )
   }
 }
 
-export default Connect(
-  () => {
-    const selectors = {
-      primaryAxes: Selectors.primaryAxes(),
-      secondaryAxes: Selectors.secondaryAxes(),
-    }
-    return state => ({
-      primaryAxes: selectors.primaryAxes(state),
-      secondaryAxes: selectors.secondaryAxes(state),
-      preMaterializedData: state.preMaterializedData,
-      materializedData: state.materializedData,
-      stackData: state.stackData,
-      hovered: state.hovered,
-      selected: state.selected,
-      groupMode: state.groupMode,
-    })
-  },
-  {
-    filter: (oldState, newState, meta) => meta.type !== 'pointer',
+export default withConsumer(() => {
+  const selectors = {
+    primaryAxes: Selectors.primaryAxes(),
+    secondaryAxes: Selectors.secondaryAxes(),
   }
-)(Series)
+
+  return state => ({
+    primaryAxes: selectors.primaryAxes(state),
+    secondaryAxes: selectors.secondaryAxes(state),
+    preMaterializedData: state.preMaterializedData,
+    materializedData: state.materializedData,
+    stackData: state.stackData,
+    hovered: state.hovered,
+    selected: state.selected,
+    groupMode: state.groupMode,
+  })
+})(Series)

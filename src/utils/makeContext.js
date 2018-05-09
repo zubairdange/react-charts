@@ -1,4 +1,7 @@
 import React from 'react'
+import hoistNonReactStatics from 'hoist-non-react-statics'
+
+//
 
 const defualtSubscribe = state => state
 const defaultMiddleware = ({ action, setState }) =>
@@ -19,16 +22,22 @@ export default function makeContext (userDefaultProps) {
 
   class Provider extends React.Component {
     static defaultProps = defaultProps
-    static displayName = `${defaultProps.displayName}`
+    static displayName = `${defaultProps.displayName}Provider`
     constructor (props) {
       super(props)
+      const { initialState, middleware, ...rest } = this.props
       this.state = {
         ...this.props.initialState,
-        setContext: this.setContext, // eslint-disable-line
+        ...rest,
+        dispatch: this.dispatch, // eslint-disable-line
       }
     }
+    static getDerivedStateFromProps = nextProps => {
+      const { initialState, middlware, ...rest } = nextProps
+      return rest
+    }
     safeSetState = (...args) => this.setState(...args)
-    setContext = action =>
+    dispatch = action =>
       this.props.middleware({
         action,
         setState: this.safeSetState,
@@ -40,29 +49,64 @@ export default function makeContext (userDefaultProps) {
     }
   }
 
-  const withProvider = providerOpts => Component => props => (
-    <Context.Provider {...providerOpts}>
-      <Component {...props} />
-    </Context.Provider>
-  )
+  class Consumer extends React.Component {
+    static defaultProps = {
+      subscribe: defualtSubscribe,
+    }
+    static displayName = `${defaultProps.displayName}Consumer`
+    constructor (props) {
+      super(props)
+      this.getSubscriber()
+    }
+    getSubscriber = () => {
+      const { subscribe } = this.props
+      let hasSelectors
+      try {
+        if (typeof subscribe({}) === 'function') {
+          hasSelectors = true
+        }
+      } catch (err) {
+        //
+      }
 
-  const Consumer = ({ subscribe = defualtSubscribe, render, children }) => (
-    <Context.Consumer>
-      {({ setContext, ...state }) => (render || children)({ ...subscribe(state), setContext })}
-    </Context.Consumer>
-  )
+      if (hasSelectors) {
+        this.subscribe = subscribe()
+      } else {
+        this.subscribe = subscribe
+      }
+    }
+    render () {
+      const {
+        render, children, component, subscribe, ...rest
+      } = this.props
+      return (
+        <Context.Consumer>
+          {({ dispatch, ...state }) =>
+            (render || children)({ ...this.subscribe(state, rest), dispatch })
+          }
+        </Context.Consumer>
+      )
+    }
+  }
 
-  const withConsumer = (subscribe = defualtSubscribe) => Component => props => (
-    <Context.Consumer>
-      {({ setContext, ...state }) => (
-        <Component {...{ ...props, ...subscribe(state, props), setContext }} />
-      )}
-    </Context.Consumer>
-  )
+  const withConsumer = subscribe => Component => {
+    class withConsumer extends React.Component {
+      render () {
+        return (
+          <Consumer
+            subscribe={subscribe}
+            render={state => <Component {...state} {...this.props} />}
+            {...this.props}
+          />
+        )
+      }
+    }
+    hoistNonReactStatics(withConsumer, Component)
+    return withConsumer
+  }
 
   return {
     Provider,
-    withProvider,
     Consumer,
     withConsumer,
   }

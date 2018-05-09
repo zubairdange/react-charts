@@ -1,8 +1,7 @@
 import { Component } from 'react'
-import { Connect } from 'react-state'
 //
+import { withConsumer } from '../utils/Context'
 import Selectors from '../utils/Selectors'
-
 import updateScale from './AxisPie.updateScale'
 
 // const fontSize = 10
@@ -31,8 +30,11 @@ class AxisPie extends Component {
     super()
     this.updateScale = updateScale.bind(this)
   }
-  componentWillReceiveProps (newProps) {
-    const oldProps = this.props
+  componentDidMount () {
+    this.updateScale(this.props)
+  }
+  componentDidUpdate (oldProps) {
+    const newProps = this.props
 
     // If any of the following change,
     // we need to update the axis
@@ -48,34 +50,20 @@ class AxisPie extends Component {
       this.updateStackData(newProps)
     }
   }
-  componentDidMount () {
-    this.updateScale(this.props)
-  }
-  shouldComponentUpdate (newProps) {
-    if (newProps.axis !== this.props.axis) {
-      return true
-    }
-    return false
-  }
   render () {
     // TODO: This is where permanent labels and lines will be drawn
     return null
   }
 }
 
-export default Connect(
-  () => {
-    const selectors = {
-      gridWidth: Selectors.gridWidth(),
-      gridHeight: Selectors.gridHeight(),
-    }
-    return state => ({
-      materializedData: state.materializedData,
-      width: selectors.gridWidth(state),
-      height: selectors.gridHeight(state),
-    })
-  },
-  {
-    filter: (oldState, newState, meta) => meta.type !== 'pointer',
+export default withConsumer(() => {
+  const selectors = {
+    gridWidth: Selectors.gridWidth(),
+    gridHeight: Selectors.gridHeight(),
   }
-)(AxisPie)
+  return state => ({
+    materializedData: state.materializedData,
+    width: selectors.gridWidth(state),
+    height: selectors.gridHeight(state),
+  })
+})(AxisPie)

@@ -1,9 +1,8 @@
-import React, { PureComponent } from 'react'
-import { Connect } from 'react-state'
-
+import React, { Component } from 'react'
 import { area, line } from 'd3-shape'
 //
-import { Animate } from '../components/ReactMove'
+
+import { withConsumer } from '../utils/Context'
 import Utils from '../utils/Utils'
 import Curves from '../utils/Curves'
 import { selectSeries, selectDatum, hoverSeries, hoverDatum } from '../utils/interactionMethods'
@@ -15,7 +14,7 @@ const lineDefaultStyle = {
   strokeWidth: 3,
 }
 
-class Area extends PureComponent {
+class Area extends Component {
   static defaultProps = {
     showOrphans: true,
     curve: 'monotoneX',
@@ -203,13 +202,8 @@ class Area extends PureComponent {
   }
 }
 
-export default Connect(
-  state => ({
-    hovered: state.hovered,
-    selected: state.selected,
-    interaction: state.interaction,
-  }),
-  {
-    filter: (oldState, newState, meta) => meta.type !== 'pointer',
-  }
-)(Area)
+export default withConsumer(state => ({
+  hovered: state.hovered,
+  selected: state.selected,
+  interaction: state.interaction,
+}))(Area)
